@@ -1,28 +1,63 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div id="camera">
+      <qrcode-stream @decode="onDecode"></qrcode-stream>
+    </div>
+    <div id="raw">raw: {{result}}</div>
+    <test-beep />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { QrcodeStream } from 'vue-qrcode-reader'
+import {beep} from "@/components/beep/beep.js";
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    QrcodeStream,
+  },
+  data () {
+    return {
+      camera: 'auto',
+      result: null,
+      showScanConfirmation: false
+    }
+  },
+  methods: {
+      onDecode(content) {
+        console.log(content);
+        this.result = content;
+        beep("set_complete");
+      }
   }
 }
 </script>
 
 <style>
+
+body {
+  color: #eee;
+  background-color: #111;
+
+}
+
+div {
+  padding:1em;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
   margin-top: 60px;
 }
+
+div#camera {
+  width: 400px;
+  height: 400px;
+
+}
+
 </style>
