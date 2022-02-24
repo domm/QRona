@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <h1></h1>
     <div id="camera">
       <qrcode-stream @decode="onDecode"></qrcode-stream>
     </div>
@@ -26,7 +27,6 @@ export default {
   },
   methods: {
       onDecode(content) {
-        console.log(content);
         this.result = content;
         beep("set_complete");
       }
@@ -39,11 +39,6 @@ export default {
 body {
   color: #eee;
   background-color: #111;
-
-}
-
-div {
-  padding:1em;
 }
 
 #app {
@@ -51,12 +46,15 @@ div {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  margin-top: 60px;
+  color: #b5e853;
 }
 
 div#camera {
   width: 400px;
   height: 400px;
+  margin:0px;
+  padding: 0px;
+  border: 2px #ddd solid;
 
 }
 
