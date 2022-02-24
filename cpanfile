@@ -1,0 +1,15 @@
+requires 'QRCode::Base45';
+requires 'Compress::Zlib';
+requires 'CBOR::XS';
+requires 'MIME::Base64';
+requires 'Cpanel::JSON::XS';
+requires 'Path::Tiny';
+requires 'List::Util';
+requires 'FindBin';
+requires 'DateTime';
+requires 'Crypt::PK::ECC';
+requires 'Crypt::PK::RSA';
+requires 'Crypt::JWT';
+requires 'Plack::Builder';
+requires 'Plack::App::File';
+requires 'Plack::Middleware::CrossOrigin';
