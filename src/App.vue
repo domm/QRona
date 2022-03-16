@@ -1,18 +1,21 @@
 <template>
   <div id="app">
-    <div id="camera">
-      <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
-    </div>
-    <div id="result" :class="status">
-      <div v-if="result">
-        <h1>{{ result.reason }}</h1>
-        <h3>{{ result.given_name }} {{result.family_name}}</h3>
-        <p>{{ result.date_of_birth }}</p>
-        <p v-if="result.more_reason">{{ result.more_reason }}</p>
-        <button @click="reset">Scan another code!</button>
+    <main>
+      <div id="camera">
+        <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
       </div>
-      <h1 v-else>Please scan your QR Code!</h1>
-    </div>
+      <div id="result" :class="status">
+        <div v-if="result">
+          <h1>{{ result.reason }}</h1>
+          <h3>{{ result.given_name }} {{result.family_name}}</h3>
+          <p>{{ result.date_of_birth }}</p>
+          <p v-if="result.more_reason">{{ result.more_reason }}</p>
+          <button @click="reset">Scan another code!</button>
+        </div>
+        <h1 v-else>Please scan your QR Code!</h1>
+      </div>
+    </main>
+    <footer>blabla</footer>
   </div>
 </template>
 
@@ -68,20 +71,33 @@ export default {
 
 <style>
 
+html {
+  height: 100%;}
+
 body {
   color: #b5e853;
   background-color: #111;
   font-size: 1.2rem;
-}
-
-#app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
+  height: 100%;
+}
+
+div#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
+}
+
+main {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-content: flex-start;
+  flex: 1 0 auto;
 }
 
 div#camera {
@@ -133,6 +149,15 @@ button:hover {
 button:active {
   box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6),
               inset 2px 2px 3px rgba(0, 0, 0, .6);
+}
+
+footer {
+  border-top: 1px solid;
+  margin: 2em 10% 1em 10%;
+  padding-top: 0.5em;
+  color: #75a813;
+  font-size:0.8em;
+  flex-shrink: 0;
 }
 
 </style>
