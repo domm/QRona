@@ -103,7 +103,7 @@ main {
 div#camera {
   margin:0px;
   padding: 0px;
-  border: 0px;
+  border: 2px solid #333;
   flex: 400px 0 1;
   height: 400px;
 }
@@ -111,12 +111,12 @@ div#camera {
 div#result {
   border: 10px solid;
   padding: 10px;
-  flex: 360px 0 1;
-  height: 360px;
+  flex: 364px 0 1;
+  height: 364px;
 }
 
 .waiting {
-  border-color: #222 !important;
+  border-color: #333 !important;
 }
 
 .valid {
