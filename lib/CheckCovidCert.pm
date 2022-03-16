@@ -1,4 +1,3 @@
-
 use 5.034;
 use Object::Pad;
 
@@ -44,7 +43,7 @@ method decode {
         if ord(bytes::substr $cert,0,1) == 120;
     my $decoded = $cbor->decode($cert);
 
-    die('Not a Sign1 CWT document')
+    return fail('Not a Sign1 CWT document')
         unless $decoded->tag == 18 # Sign1 tag
         && ref $decoded->value eq 'ARRAY'
         && scalar $decoded->value->@* == 4; # need four elements
@@ -55,7 +54,8 @@ method decode {
     my $payload = $cbor->decode($payload_cbor);
     my $data    = $payload->{-260}{1};
     # see https://github.com/ehn-dcc-development/ehn-dcc-schema/tree/release/1.3.0/valuesets
-    my ($valid_days,$valid_from);
+    my ($valid_days,$valid_from, $reason, $more_reason);
+
     foreach my $type (qw(v r t)) { # vaccinated recovered tested
         next
             unless defined $data->{$type};
@@ -81,6 +81,8 @@ method decode {
                 } elsif ($detail->{tt} eq 'LP217198-3') {
                     $valid_days = 1;
                 }
+                $reason = "Test";
+                $more_reason = join(", ",grep { $_ } map { $detail->{$_} } qw(tt nm ma tc));
             } elsif ($type eq 'v') {
                 # vp = Type of the vaccine or prophylaxis used.
                 # mp = Medicinal product used for this specific dose of vaccination.
@@ -100,12 +102,15 @@ method decode {
                 if ($detail->{dn} != $detail->{sd} || $detail->{dn} == 1) {
                     $valid_from = undef;
                 }
+                $reason = "Vaccination";
+                $more_reason = join(", ",grep { $_ } map { $detail->{$_} } qw(vp mp v dn));
             } elsif ($type eq 'r') {
                 # fr: The date when a sample for the NAAT test producing a positive result was collected
                 # df: The first date on which the certificate is considered to be valid
                 # du: The last date on which the certificate is considered to be valid, assigned by the certificate issuer.
                 $valid_from = parse_date($detail->{df});
                 $valid_days = 180;
+                $reason = "Recovered!";
             }
         }
     }
@@ -131,57 +136,55 @@ method decode {
         unless defined $pheader->{1}
         && exists $ALG{$pheader->{1}};
     my $alg = $ALG{$pheader->{1}};
-# Get key from trusted list
-# Obtain files via
-# curl https://dgcg.covidbevis.se/tp/cert -o covid_signer.crt
-# curl https://dgcg.covidbevis.se/tp/trust-list | perl -MCrypt::JWT=decode_jwt -MCpanel::JSON::XS -n -E 'say encode_json(decode_jwt( token => $_, key => Crypt::PK::ECC->new("signer.crt")))' > covid_trust_list.json
-my $trust_list = path('covid_trust_list.json');
-return fail('Trust list not found. Download first')
-    unless -e $trust_list;
+    # Get key from trusted list
+    # Obtain files via
+    # curl https://dgcg.covidbevis.se/tp/cert -o covid_signer.crt
+    # curl https://dgcg.covidbevis.se/tp/trust-list | perl -MCrypt::JWT=decode_jwt -MCpanel::JSON::XS -n -E 'say encode_json(decode_jwt( token => $_, key => Crypt::PK::ECC->new("signer.crt")))' > covid_trust_list.json
+    my $trust_list = path('covid_trust_list.json');
+    return fail('Trust list not found. Download first')
+        unless -e $trust_list;
 
-my $certs = decode_json($trust_list->slurp);
-my $signing_cert = first { $_->{kid} eq $key_id }
-    $certs->{dsc_trust_list}{$payload->{1}}{keys}->@*;
-return fail('Signed with an untrusted certificate')
-    unless $signing_cert;
-  # TODO check eku
-  # $certs->{dsc_trust_list}{$payload->{1}}{eku}{$key_id}
-  # OID 1.3.6.1.4.1.0.1847.2021.1.1 -- valid for test
-  # OID 1.3.6.1.4.1.0.1847.2021.1.2 -- valid for vaccinations
-  # OID 1.3.6.1.4.1.0.1847.2021.1.3 -- valid for recovery
+    my $certs = decode_json($trust_list->slurp);
+    my $signing_cert = first { $_->{kid} eq $key_id }
+        $certs->{dsc_trust_list}{$payload->{1}}{keys}->@*;
+    return fail('Signed with an untrusted certificate')
+        unless $signing_cert;
+      # TODO check eku
+      # $certs->{dsc_trust_list}{$payload->{1}}{eku}{$key_id}
+      # OID 1.3.6.1.4.1.0.1847.2021.1.1 -- valid for test
+      # OID 1.3.6.1.4.1.0.1847.2021.1.2 -- valid for vaccinations
+      # OID 1.3.6.1.4.1.0.1847.2021.1.3 -- valid for recovery
 
-# Build certificate
-my $x509cert = $signing_cert->{x5c}[0];
-my $public_key = $alg->{class}->new(\qq[-----BEGIN CERTIFICATE-----
-${x509cert}
------END CERTIFICATE-----]);
+    # Build certificate
+    my $x509cert = $signing_cert->{x5c}[0];
+    my $public_key = $alg->{class}->new(\qq[-----BEGIN CERTIFICATE-----${x509cert}-----END CERTIFICATE-----]);
 
-# Build COSE signature
-my $to_be_signed = $cbor->encode([
-    # context
-    CBOR::XS::as_text('Signature1'),
-    # protected header
-    $pheader_cbor,
-    # external aad
-    CBOR::XS::as_bytes(''),
-    # cbor payload
-    $payload_cbor,
-]);
+    # Build COSE signature
+    my $to_be_signed = $cbor->encode([
+        # context
+        CBOR::XS::as_text('Signature1'),
+        # protected header
+        $pheader_cbor,
+        # external aad
+        CBOR::XS::as_bytes(''),
+        # cbor payload
+        $payload_cbor,
+    ]);
 
-# Check signature
-return fail('Could not verify signature')
-    unless $public_key->verify_message_rfc7518($signature,$to_be_signed,$alg->{digest});
+    # Check signature
+    return fail('Could not verify signature')
+        unless $public_key->verify_message_rfc7518($signature,$to_be_signed,$alg->{digest});
 
-# Success
-my $name = $payload->{-260}{1}{nam};
-
-use Data::Dumper; $Data::Dumper::Maxdepth=5;$Data::Dumper::Sortkeys=1;warn Data::Dumper::Dumper $payload->{-260}{1};
-
+    # Success
+    my $data = $payload->{-260}{1};
     return {
-        status => 'valid',
-        given_name => $name->{gn},
-        fist_name => $name->{fn},
-    }
+        status        => 'valid',
+        given_name    => $data->{nam}{gn},
+        family_name   => $data->{nam}{fn},
+        date_of_birth => $data->{dob},
+        reason        => $reason,
+        more_reason   => $more_reason,
+    };
 }
 
 sub fail {
@@ -228,6 +231,6 @@ sub parse_date {
         )
     }
     fail('Could not parse date: '.$date)
-}
+    }
 
 }

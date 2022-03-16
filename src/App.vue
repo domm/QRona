@@ -1,15 +1,24 @@
 <template>
   <div id="app">
     <div id="camera">
-      <qrcode-stream @decode="onDecode"></qrcode-stream>
+      <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
     </div>
-    <div id="result" :class="status">raw: {{result}}</div>
+    <div id="result" :class="status">
+      <div v-if="result">
+        <h1>{{ result.reason }}</h1>
+        <h3>{{ result.given_name }} {{result.family_name}}</h3>
+        <p>{{ result.date_of_birth }}</p>
+        <p v-if="result.more_reason">{{ result.more_reason }}</p>
+        <button @click="reset">Scan another code!</button>
+      </div>
+      <h1 v-else>Please scan your QR Code!</h1>
+    </div>
   </div>
 </template>
 
 <script>
-import { QrcodeStream } from 'vue-qrcode-reader'
-import {beep} from "@/components/beep/beep.js";
+import { QrcodeStream } from 'vue-qrcode-reader';
+import { beep } from "@/components/beep/beep.js";
 
 export default {
   name: 'App',
@@ -25,27 +34,34 @@ export default {
     }
   },
   methods: {
-      async onDecode(content) {
-        fetch("http://localhost:5000/api/foo", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ qr: content })
-        })
-        .then(response => response.json())
-        .then(json => {
-          this.result = json;
-          this.status = json.status;
-          if (json.status == 'valid') {
-            beep("set_complete");
-          }
-          else {
-            beep("error");
-          }
-        })
-        .catch(err => console.log('Request Failed', err)); // Catch errors
-      },
+    async onDecode(content) {
+      fetch("http://localhost:5000/api/foo", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ qr: content })
+      })
+      .then(response => response.json())
+      .then(json => {
+        this.result = json;
+        this.status = json.status;
+        if (json.status == 'valid') {
+          beep("set_complete");
+        }
+        else {
+          beep("error");
+        }
+        this.camera = 'off';
+        setTimeout(this.reset, 10 * 1000);
+      })
+      .catch(err => alert('Request Failed: ' + err));
+    },
+    reset() {
+      this.result = null;
+      this.status = 'waiting';
+      this.camera = 'auto';
+    }
   }
 }
 </script>
@@ -53,8 +69,9 @@ export default {
 <style>
 
 body {
-  color: #eee;
+  color: #b5e853;
   background-color: #111;
+  font-size: 1.2rem;
 }
 
 #app {
@@ -62,24 +79,24 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #b5e853;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 div#camera {
-  width: 400px;
-  height: 400px;
   margin:0px;
   padding: 0px;
-  border: 2px #ddd solid;
-  flex-basis: 400px;
+  border: 0px;
+  flex: 400px 0 1;
+  height: 400px;
 }
 
 div#result {
   border: 10px solid;
-  padding: 1em;
-  flex: 50% 1;
+  padding: 10px;
+  flex: 360px 0 1;
+  height: 360px;
 }
 
 .waiting {
@@ -92,7 +109,30 @@ div#result {
 
 .invalid {
   border-color: #dd3333 !important;
+  color: #dd3333;
 }
 
+button {
+  border: 0;
+  line-height: 2.5;
+  padding: 0 20px;
+  font-size: 1rem;
+  text-align: center;
+  background-color: #b5e853;
+  color: #111;
+  text-shadow: 1px 1px 1px #333;
+  border-radius: 10px;
+  box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6),
+              inset -2px -2px 3px rgba(0, 0, 0, .6);
+}
+
+button:hover {
+  background-color: #ffff80;
+}
+
+button:active {
+  box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6),
+              inset 2px 2px 3px rgba(0, 0, 0, .6);
+}
 
 </style>
