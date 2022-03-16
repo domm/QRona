@@ -1,11 +1,9 @@
 <template>
   <div id="app">
-    <h1></h1>
     <div id="camera">
       <qrcode-stream @decode="onDecode"></qrcode-stream>
     </div>
-    <div id="raw">raw: {{result}}</div>
-    <test-beep />
+    <div id="result" :class="status">raw: {{result}}</div>
   </div>
 </template>
 
@@ -22,14 +20,32 @@ export default {
     return {
       camera: 'auto',
       result: null,
-      showScanConfirmation: false
+      showScanConfirmation: false,
+      status: 'waiting',
     }
   },
   methods: {
-      onDecode(content) {
-        this.result = content;
-        beep("set_complete");
-      }
+      async onDecode(content) {
+        fetch("http://localhost:5000/api/foo", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ qr: content })
+        })
+        .then(response => response.json())
+        .then(json => {
+          this.result = json;
+          this.status = json.status;
+          if (json.status == 'valid') {
+            beep("set_complete");
+          }
+          else {
+            beep("error");
+          }
+        })
+        .catch(err => console.log('Request Failed', err)); // Catch errors
+      },
   }
 }
 </script>
@@ -47,6 +63,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #b5e853;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 div#camera {
@@ -55,7 +73,26 @@ div#camera {
   margin:0px;
   padding: 0px;
   border: 2px #ddd solid;
-
+  flex-basis: 400px;
 }
+
+div#result {
+  border: 10px solid;
+  padding: 1em;
+  flex: 50% 1;
+}
+
+.waiting {
+  border-color: #222 !important;
+}
+
+.valid {
+  border-color: #33dd33 !important;
+}
+
+.invalid {
+  border-color: #dd3333 !important;
+}
+
 
 </style>
