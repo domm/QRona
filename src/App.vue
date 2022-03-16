@@ -38,7 +38,7 @@ export default {
   },
   methods: {
     async onDecode(content) {
-      fetch("http://localhost:5000/api/foo", {
+      fetch("/api/qr", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
