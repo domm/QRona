@@ -31,10 +31,6 @@ has %ALG = (
     '-39' => { class => 'Crypt::PK::RSA', digest => 'SHA512' },
 );
 
-method foo {
-    use Data::Dumper; $Data::Dumper::Maxdepth=3;$Data::Dumper::Sortkeys=1;warn Data::Dumper::Dumper $ALG{-7};
-}
-
 method decode {
     my $cbor = CBOR::XS->new;
 
@@ -77,7 +73,7 @@ method decode {
                 $valid_from = parse_date($detail->{sc});
                 # Must be "Not detected"
                 if ($detail->{tr} ne '260415000') {
-                    fail('Positive test certificate! Go home!');
+                    return fail('Positive test certificate! Go home!');
                 # PCR
                 } elsif ($detail->{tt} eq 'LP6464-4') {
                     $valid_days = 2;
@@ -115,23 +111,23 @@ method decode {
     }
 
     # Check expiry
-    fail('Certificate is not yet valid')
+    return fail('Certificate is not yet valid')
         if ! $valid_from || $valid_from->epoch > time;
 
-    fail('Not a valid COVID-19 certificate')
+    return fail('Not a valid COVID-19 certificate')
         if !$valid_days;
 
-        #fail('Certificate is expired')
-        #    if $valid_from->add( days => $valid_days )->epoch < time;
+    return fail('Certificate is expired')
+        if $valid_from->add( days => $valid_days )->epoch < time;
 
     # Get key-id
-    fail('Cannot find key id')
+    return fail('Cannot find key id')
         unless defined $pheader->{4};
     my $key_id = encode_base64($pheader->{4});
     chomp($key_id);
 
     # Get signing algorithm
-    fail('Can only handle ECC and RSA cryptography')
+    return fail('Can only handle ECC and RSA cryptography')
         unless defined $pheader->{1}
         && exists $ALG{$pheader->{1}};
     my $alg = $ALG{$pheader->{1}};
@@ -140,13 +136,13 @@ method decode {
 # curl https://dgcg.covidbevis.se/tp/cert -o covid_signer.crt
 # curl https://dgcg.covidbevis.se/tp/trust-list | perl -MCrypt::JWT=decode_jwt -MCpanel::JSON::XS -n -E 'say encode_json(decode_jwt( token => $_, key => Crypt::PK::ECC->new("signer.crt")))' > covid_trust_list.json
 my $trust_list = path('covid_trust_list.json');
-fail('Trust list not found. Download first')
+return fail('Trust list not found. Download first')
     unless -e $trust_list;
 
 my $certs = decode_json($trust_list->slurp);
 my $signing_cert = first { $_->{kid} eq $key_id }
     $certs->{dsc_trust_list}{$payload->{1}}{keys}->@*;
-fail('Signed with an untrusted certificate')
+return fail('Signed with an untrusted certificate')
     unless $signing_cert;
   # TODO check eku
   # $certs->{dsc_trust_list}{$payload->{1}}{eku}{$key_id}
@@ -173,23 +169,27 @@ my $to_be_signed = $cbor->encode([
 ]);
 
 # Check signature
-fail('Could not verify signature')
+return fail('Could not verify signature')
     unless $public_key->verify_message_rfc7518($signature,$to_be_signed,$alg->{digest});
 
 # Success
 my $name = $payload->{-260}{1}{nam};
 
-#use Data::Dumper; $Data::Dumper::Maxdepth=5;$Data::Dumper::Sortkeys=1;warn Data::Dumper::Dumper $payload;
+use Data::Dumper; $Data::Dumper::Maxdepth=5;$Data::Dumper::Sortkeys=1;warn Data::Dumper::Dumper $payload->{-260}{1};
 
     return {
-        type => 'success',
+        status => 'valid',
         given_name => $name->{gn},
         fist_name => $name->{fn},
     }
 }
 
 sub fail {
-    die(@_);
+    my $reason = shift;
+    return {
+        status => 'invalid',
+        reason => $reason,
+    };
 }
 
 sub parse_date {

@@ -6,7 +6,8 @@ use utf8;
 use Plack::Builder;
 use Plack::App::File;
 use Plack::Request;
-
+use CheckCovidCert;
+use Cpanel::JSON::XS qw(decode_json encode_json);
 
 sub run_psgi {
     my $self = shift;
@@ -15,9 +16,15 @@ sub run_psgi {
         my $env = shift;
 
         my $req = Plack::Request->new($env);
-        warn $req->content;
-
-        return [ 200, [], ['ok'] ];
+        if (my $raw = $req->content) {
+            my $payload = decode_json($raw);
+            my $c3 = CheckCovidCert->new(cert => $payload->{qr});
+            my $res = $c3->decode;
+            return [200, ['Content-Type'=>'application/json'],[ encode_json($res) ]];
+        }
+        else {
+            return [ 400, [], ['bad request'] ];
+        }
     };
 
     my $static_app = Plack::App::File->new( root => './dist' )->to_app;

@@ -13,3 +13,4 @@ requires 'Crypt::JWT';
 requires 'Plack::Builder';
 requires 'Plack::App::File';
 requires 'Plack::Middleware::CrossOrigin';
+requires 'Object::Pad';
