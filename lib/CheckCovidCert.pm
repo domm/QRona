@@ -176,7 +176,6 @@ method decode {
         unless $public_key->verify_message_rfc7518($signature,$to_be_signed,$alg->{digest});
 
     # Success
-    my $data = $payload->{-260}{1};
     return {
         status        => 'valid',
         given_name    => $data->{nam}{gn},
