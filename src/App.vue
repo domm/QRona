@@ -1,6 +1,10 @@
 <template>
   <div id="app">
     <main>
+      <div id="head">
+        <h1>QRONA</h1>
+        Scan and validate your Corona QR Certificate
+      </div>
       <div id="camera">
         <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
       </div>
@@ -15,7 +19,10 @@
         <h1 v-else>Please scan your QR Code!</h1>
       </div>
     </main>
-    <footer>blabla</footer>
+    <footer>
+    QRONA - a not very serious Corona Certificate Validator.<br>
+    Made by <a href="https://domm.plix.at">domm</a> for <a href="http://act.yapc.eu/gpw2022/talk/7791">this talk at German Perl Workshop</a>.<br>
+    Original validator code by Maroš.</footer>
   </div>
 </template>
 
@@ -100,6 +107,12 @@ main {
   flex: 1 0 auto;
 }
 
+div#head {
+  flex: 100%;
+  margin-bottom:1em;
+}
+
+
 div#camera {
   margin:0px;
   padding: 0px;
@@ -151,6 +164,10 @@ button:active {
               inset 2px 2px 3px rgba(0, 0, 0, .6);
 }
 
+h1 {
+  margin-bottom: 0.2em;
+}
+
 footer {
   border-top: 1px solid;
   margin: 2em 10% 1em 10%;
@@ -158,6 +175,11 @@ footer {
   color: #75a813;
   font-size:0.8em;
   flex-shrink: 0;
+  text-align: right;
+}
+
+a {
+  color: #ffff00;
 }
 
 </style>
