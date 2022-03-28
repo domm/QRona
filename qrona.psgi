@@ -2,7 +2,7 @@
 use 5.022;
 use local::lib qw(local);
 use lib './lib';
-use CovidQR;
+use QRona;
 
-CovidQR->run_psgi;
+QRona->run_psgi;
 

@@ -1,30 +1,23 @@
 import {beep_error}   from "@/components/beep/beep_error.base64";
-import {beep_success} from "@/components/beep/beep_success.base64";
-import {beep_warning} from "@/components/beep/beep_warning.base64";
-import {beep_checkin_success} from "@/components/beep/beep_checkin_success.base64";
-import {beep_scan_to_add_success} from "@/components/beep/beep_scan_to_add_success.base64";
-import {beep_set_complete} from "@/components/beep/beep_set_complete.base64";
+import {beep_default} from "@/components/beep/beep_default.base64";
+import {beep_test} from "@/components/beep/beep_test.base64";
+import {beep_recovered} from "@/components/beep/beep_recovered.base64";
+import {beep_vaccination} from "@/components/beep/beep_vaccination.base64";
 
 export function beep(type) {
-  let beeper = beep_warning;
+  let beeper = beep_default;
   switch(type) {
     case 'error':
       beeper = beep_error;
       break;
-    case 'success':
-      beeper = beep_success;
+    case 'Test':
+      beeper = beep_test;
       break;
-    case 'warning':
-      beeper = beep_warning;
+    case 'Vaccination':
+      beeper = beep_vaccination;
       break;
-    case 'checkin_success':
-      beeper = beep_checkin_success;
-      break;
-    case 'scan_to_add_success':
-      beeper = beep_scan_to_add_success;
-      break;
-    case 'set_complete':
-      beeper = beep_set_complete;
+    case 'Recovered':
+      beeper = beep_recovered;
       break;
   }
   beeper.cloneNode().play();
