@@ -43,7 +43,7 @@ method decode {
         if ord(bytes::substr $cert,0,1) == 120;
     my $decoded = $cbor->decode($cert);
 
-    return fail('Not a Sign1 CWT document')
+    return $self->fail('Not a Sign1 CWT document')
         unless $decoded->tag == 18 # Sign1 tag
         && ref $decoded->value eq 'ARRAY'
         && scalar $decoded->value->@* == 4; # need four elements
@@ -70,10 +70,10 @@ method decode {
                 # ma: Test device identifier (Antigen only)
                 # tc: Name of the actor that conducted the test
                 # sc: The date and time when the test sample was collected
-                $valid_from = parse_date($detail->{sc});
+                $valid_from = $self->parse_date($detail->{sc});
                 # Must be "Not detected"
                 if ($detail->{tr} ne '260415000') {
-                    return fail('Positive test certificate! Go home!');
+                    return $self->fail('Positive test certificate! Go home!');
                 # PCR
                 } elsif ($detail->{tt} eq 'LP6464-4') {
                     $valid_days = 2;
@@ -91,7 +91,7 @@ method decode {
                 # sd = The overall number of doses in the series
                 # dt = Date of vaccination
                 $valid_days = $detail->{dn} >= 3 ? 270:180;
-                $valid_from = parse_date($detail->{dt});
+                $valid_from = $self->parse_date($detail->{dt});
 
                 # Jansen
                 if ($detail->{mp} eq 'EU/1/20/1525') {
@@ -108,7 +108,7 @@ method decode {
                 # fr: The date when a sample for the NAAT test producing a positive result was collected
                 # df: The first date on which the certificate is considered to be valid
                 # du: The last date on which the certificate is considered to be valid, assigned by the certificate issuer.
-                $valid_from = parse_date($detail->{df});
+                $valid_from = $self->parse_date($detail->{df});
                 $valid_days = 180;
                 $reason = "Recovered!";
             }
@@ -116,23 +116,23 @@ method decode {
     }
 
     # Check expiry
-    return fail('Certificate is not yet valid')
+    return $self->fail('Certificate is not yet valid')
         if ! $valid_from || $valid_from->epoch > time;
 
-    return fail('Not a valid COVID-19 certificate')
+    return $self->fail('Not a valid COVID-19 certificate')
         if !$valid_days;
 
-    return fail('Certificate is expired')
+    return $self->fail('Certificate is expired')
         if $valid_from->add( days => $valid_days )->epoch < time;
 
     # Get key-id
-    return fail('Cannot find key id')
+    return $self->fail('Cannot find key id')
         unless defined $pheader->{4};
     my $key_id = encode_base64($pheader->{4});
     chomp($key_id);
 
     # Get signing algorithm
-    return fail('Can only handle ECC and RSA cryptography')
+    return $self->fail('Can only handle ECC and RSA cryptography')
         unless defined $pheader->{1}
         && exists $ALG{$pheader->{1}};
     my $alg = $ALG{$pheader->{1}};
@@ -141,13 +141,13 @@ method decode {
     # curl https://dgcg.covidbevis.se/tp/cert -o covid_signer.crt
     # curl https://dgcg.covidbevis.se/tp/trust-list | perl -MCrypt::JWT=decode_jwt -MCpanel::JSON::XS -n -E 'say encode_json(decode_jwt( token => $_, key => Crypt::PK::ECC->new("signer.crt")))' > covid_trust_list.json
     my $trust_list = path('covid_trust_list.json');
-    return fail('Trust list not found. Download first')
+    return $self->fail('Trust list not found. Download first')
         unless -e $trust_list;
 
     my $certs = decode_json($trust_list->slurp);
     my $signing_cert = first { $_->{kid} eq $key_id }
         $certs->{dsc_trust_list}{$payload->{1}}{keys}->@*;
-    return fail('Signed with an untrusted certificate')
+    return $self->fail('Signed with an untrusted certificate')
         unless $signing_cert;
       # TODO check eku
       # $certs->{dsc_trust_list}{$payload->{1}}{eku}{$key_id}
@@ -172,7 +172,7 @@ method decode {
     ]);
 
     # Check signature
-    return fail('Could not verify signature')
+    return $self->fail('Could not verify signature')
         unless $public_key->verify_message_rfc7518($signature,$to_be_signed,$alg->{digest});
 
     # Success
@@ -186,7 +186,7 @@ method decode {
     };
 }
 
-sub fail {
+method fail {
     my $reason = shift;
     return {
         status => 'invalid',
@@ -194,7 +194,7 @@ sub fail {
     };
 }
 
-sub parse_date {
+method parse_date {
     my $date = shift;
     if ($date =~ m/^
         (?<year>20\d\d)
@@ -229,7 +229,7 @@ sub parse_date {
             time_zone => $tz,
         )
     }
-    fail('Could not parse date: '.$date)
+    $self->fail('Could not parse date: '.$date)
     }
 
 }
