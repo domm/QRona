@@ -2,7 +2,7 @@
   <div id="app">
     <main>
       <div id="head">
-        <h1>QRONA</h1>
+        <h1>QRona</h1>
         Scan and validate your Corona QR Certificate
       </div>
       <div id="camera">
@@ -16,11 +16,11 @@
           <p v-if="result.more_reason">{{ result.more_reason }}</p>
           <button @click="reset">Scan another code!</button>
         </div>
-        <h1 v-else>Please scan your QR Code!</h1>
+        <h1 v-else>Please scan your Covid Certificate QR Code!</h1>
       </div>
     </main>
     <footer>
-      QRONA - a not very serious Corona Certificate Validator.<br />
+      QRona - a not very serious Corona Certificate Validator.<br />
       Made by <a href="https://domm.plix.at">domm</a> for <a href="http://act.yapc.eu/gpw2022/talk/7791">this talk at German Perl Workshop</a>.<br />
       Original validator code by Maroš.
     </footer>
@@ -32,7 +32,7 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 import { beep } from "@/components/beep/beep.js";
 
 export default {
-  name: 'App',
+  name: 'QRona',
   components: {
     QrcodeStream,
   },
