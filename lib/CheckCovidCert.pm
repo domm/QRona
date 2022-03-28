@@ -111,7 +111,7 @@ method decode {
                 # du: The last date on which the certificate is considered to be valid, assigned by the certificate issuer.
                 $valid_from = $self->parse_date($detail->{df});
                 $valid_days = 180;
-                $reason = "Recovered!";
+                $reason = "Recovered";
             }
         }
     }

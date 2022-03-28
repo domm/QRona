@@ -1,8 +1,6 @@
-package CovidQR;
+package QRona;
 
-use 5.022;
-use utf8;
-
+use 5.034;
 use Plack::Builder;
 use Plack::App::File;
 use Plack::Request;
@@ -18,7 +16,7 @@ sub run_psgi {
         my $req = Plack::Request->new($env);
         if (my $raw = $req->content) {
             my $payload = decode_json($raw);
-            my $c3 = CheckCovidCert->new(cert => $payload->{qr});
+            my $c3 = CheckCovidCert->new(cert => $payload->{qr}, $payload->{ignore_expired});
             my $res = $c3->decode;
             return [200, ['Content-Type'=>'application/json'],[ encode_json($res) ]];
         }
@@ -39,7 +37,6 @@ sub run_psgi {
         return builder {
             mount '/'           => $static_app;
             mount '/api'        => $api_app;
-            mount '/api/static' => $static_app;
         };
     };
 }
