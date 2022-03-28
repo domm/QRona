@@ -20,9 +20,10 @@
       </div>
     </main>
     <footer>
-    QRONA - a not very serious Corona Certificate Validator.<br>
-    Made by <a href="https://domm.plix.at">domm</a> for <a href="http://act.yapc.eu/gpw2022/talk/7791">this talk at German Perl Workshop</a>.<br>
-    Original validator code by Maroš.</footer>
+      QRONA - a not very serious Corona Certificate Validator.<br />
+      Made by <a href="https://domm.plix.at">domm</a> for <a href="http://act.yapc.eu/gpw2022/talk/7791">this talk at German Perl Workshop</a>.<br />
+      Original validator code by Maroš.
+    </footer>
   </div>
 </template>
 
@@ -57,7 +58,7 @@ export default {
         this.result = json;
         this.status = json.status;
         if (json.status == 'valid') {
-          beep("set_complete");
+          beep(json.reason);
         }
         else {
           beep("error");
