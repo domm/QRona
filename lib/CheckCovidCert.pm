@@ -16,6 +16,7 @@ use Crypt::PK::ECC;
 use Crypt::PK::RSA;
 
 has $cert :param :reader;
+has $ignore_expired :reader :param = 0;
 
 # One day
 has $DAY = 24*60*60;
@@ -123,7 +124,7 @@ method decode {
         if !$valid_days;
 
     return $self->fail('Certificate is expired')
-        if $valid_from->add( days => $valid_days )->epoch < time;
+        if !$ignore_expired && $valid_from->add( days => $valid_days )->epoch < time;
 
     # Get key-id
     return $self->fail('Cannot find key id')
