@@ -5,7 +5,7 @@
         <h1>QRona</h1>
         Scan and validate your Corona QR Certificate
       </div>
-      <div id="camera">
+      <div id="camera" style="margin-bottom:400px">
         <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
       </div>
       <div id="result" :class="status">
@@ -63,6 +63,10 @@ export default {
         else {
           beep("error");
         }
+        document.getElementById('result').scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
         this.camera = 'off';
         setTimeout(this.reset, 10 * 1000);
       })
