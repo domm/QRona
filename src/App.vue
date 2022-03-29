@@ -5,7 +5,7 @@
         <h1>QRona</h1>
         Scan and validate your Corona QR Certificate
       </div>
-      <div id="camera" style="margin-bottom:400px">
+      <div id="camera">
         <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
       </div>
       <div id="result" :class="status">
