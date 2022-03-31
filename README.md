@@ -1,24 +1,12 @@
-# covid-qr
+# QRona
 
-## Project setup
-```
-yarn install
-```
+a not very serious Corona Certificate Validator
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+See https://qrona.plix.at for a running instance
 
-### Compiles and minifies for production
-```
-yarn build
-```
+And see https://domm.plix.at/talks/qrona.html for slides and a video explaining the code.
 
-### Lints and fixes files
-```
-yarn lint
-```
+Written using Perl, Object::Pad, Plack and vue.js.
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+The original Corona Certificate Validator was written by [Maroš Kollár](https://github.com/maros)
+
