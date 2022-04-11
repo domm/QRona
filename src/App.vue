@@ -3,7 +3,7 @@
     <main>
       <div id="head">
         <h1>QRona</h1>
-        Scan and validate your Corona QR Certificate
+        Scan and validate your EU Digital COVID Certificate
       </div>
       <div id="camera">
         <qrcode-stream :camera="camera" @decode="onDecode"></qrcode-stream>
@@ -20,8 +20,9 @@
       </div>
     </main>
     <footer>
-      QRona - a not very serious Corona Certificate Validator.<br />
+      QRona - a not very serious Corona Certificate Validator. Please use an offical validator for serious checking, as I'm not updating the validation rules.<br />
       Made by <a href="https://domm.plix.at">domm</a> for <a href="http://act.yapc.eu/gpw2022/talk/7791">this talk at German Perl Workshop</a>.<br />
+      <a href="https://github.com/domm/QRona">https://github.com/domm/QRona</a><br/>
       Original validator code by Maroš.
     </footer>
   </div>
